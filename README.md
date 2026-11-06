@@ -16,8 +16,6 @@ or `any` after `deno task setup`, type or save in that file once.
 
 ## Two folders, two rules
 
-rrahhhhh
-
 - **`core/`** holds the game itself: plain-data state, the seeded terrain
   function, and `apply(state, command)`. It has no clock, no animation, no
   browser, and no Phaser. A command updates the state it is given, immediately,
