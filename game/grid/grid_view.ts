@@ -2,7 +2,7 @@
 // Input, the HUD, sound, and the order of events all live outside it.
 import Phaser from "phaser";
 import type { Cell, GameEvent, GameState, Terrain } from "../../core/mod.ts";
-import { terrainAt } from "../../core/mod.ts";
+import { isPassable, terrainAt } from "../../core/mod.ts";
 
 export const CELL_SIZE = 32;
 const VIEW_WIDTH = 800;
@@ -39,6 +39,7 @@ export class GridView extends Phaser.Scene {
   private readonly seed: number;
   private readonly start: Cell;
   private readonly depletedCells: Record<string, boolean> = {};
+  private lakeOpen = false;
   private ground!: Phaser.GameObjects.Graphics;
   private marker!: Phaser.GameObjects.Arc;
 
@@ -93,6 +94,20 @@ export class GridView extends Phaser.Scene {
         return this.gather();
 
       case "gather-failed":
+        return Promise.resolve();
+
+      case "crafted":
+        if (isPassable("lake", event.inventory)) {
+          this.lakeOpen = true;
+          const position = {
+            x: Math.floor(this.marker.x / CELL_SIZE),
+            y: Math.floor(this.marker.y / CELL_SIZE),
+          };
+          this.drawCellsAround(position);
+        }
+        return Promise.resolve();
+
+      case "craft-failed":
         return Promise.resolve();
 
       default:
@@ -159,7 +174,12 @@ export class GridView extends Phaser.Scene {
     this.ground.clear();
     for (let y = centerY - CELLS_DOWN; y <= centerY + CELLS_DOWN; y++) {
       for (let x = centerX - CELLS_ACROSS; x <= centerX + CELLS_ACROSS; x++) {
-        this.ground.fillStyle(TERRAIN_COLORS[terrainAt(this.seed, x, y)]);
+        const terrain = terrainAt(this.seed, x, y);
+        this.ground.fillStyle(
+          terrain === "lake" && this.lakeOpen
+            ? 0x498fbd
+            : TERRAIN_COLORS[terrain],
+        );
         this.ground.fillRect(
           x * CELL_SIZE,
           y * CELL_SIZE,

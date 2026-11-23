@@ -36,6 +36,11 @@ export class Controller {
     addEventListener("blur", () => this.held = []);
   }
 
+  submit(command: Command) {
+    this.pressed = command;
+    this.next();
+  }
+
   private keyDown(event: KeyboardEvent) {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
 
@@ -43,8 +48,7 @@ export class Controller {
     if (event.key.toLowerCase() === "g") {
       event.preventDefault();
       if (event.repeat) return;
-      this.pressed = { type: "gather" };
-      this.next();
+      this.submit({ type: "gather" });
       return;
     }
 

@@ -121,24 +121,38 @@ Deno.test("gathering from grassland adds feathers", () => {
   }]);
 });
 
-Deno.test("gathering beside a lake adds moss", () => {
+Deno.test("moss is only gathered after entering the lake", () => {
   const state = newGame(SEED);
   const { player, source } = findAdjacentSource("lake");
   state.player = player;
 
+  const before = apply(state, { type: "gather" });
+  assertEquals(before[0].type, "gathered");
+  assertEquals(state.inventory.moss, undefined);
+  assertEquals(state.changedCells[`${source.x},${source.y}`], undefined);
+
+  state.inventory["twig bridge"] = 1;
+  const direction = NEIGHBORS.find((step) =>
+    player.x + step.x === source.x && player.y + step.y === source.y
+  )!;
+  const directions = ["north", "east", "south", "west"] as const;
+  apply(state, {
+    type: "move",
+    direction: directions[NEIGHBORS.indexOf(direction)],
+  });
   const events = apply(state, { type: "gather" });
 
-  assertEquals(state.inventory, { moss: 1 });
+  assertEquals(state.inventory.moss, 1);
   assertEquals(
     state.changedCells[`${source.x},${source.y}`],
     "depleted",
   );
   assertEquals(events, [{
     type: "gathered",
-    at: player,
+    at: source,
     source,
     item: "moss",
-    inventory: { moss: 1 },
+    inventory: { ...state.inventory },
   }]);
 });
 

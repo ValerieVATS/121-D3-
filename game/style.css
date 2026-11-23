@@ -105,6 +105,32 @@ body {
   padding: 2px 0;
 }
 
+#recipes {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+#recipes button {
+  width: 100%;
+  padding: 9px;
+  color: #354331;
+  background: #f3ecd9;
+  border: 1px solid #a58a5e;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+}
+
+#recipes button:hover {
+  background: #d8dfc5;
+}
+
+#recipes button:focus-visible {
+  outline: 2px solid #526747;
+  outline-offset: 2px;
+}
+
 #depleted {
   font-size: 12px;
 }

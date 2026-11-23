@@ -5,9 +5,11 @@
 import {
   isPassable,
   type Terrain,
+  TERRAIN_ACCESS,
   TERRAIN_YIELDS,
   terrainAt,
 } from "./terrain.ts";
+import { type Recipe, RECIPES } from "./recipes.ts";
 
 export type Cell = { x: number; y: number };
 
@@ -25,7 +27,8 @@ export type GameState = {
 // Command: https://gameprogrammingpatterns.com/command.html
 export type Command =
   | { type: "move"; direction: Direction }
-  | { type: "gather" };
+  | { type: "gather" }
+  | { type: "craft"; output: string };
 
 // Domain Event: https://martinfowler.com/eaaDev/DomainEvent.html
 export type GameEvent =
@@ -38,7 +41,14 @@ export type GameEvent =
     item: string;
     inventory: Record<string, number>;
   }
-  | { type: "gather-failed"; at: Cell; reason: "no-resource" };
+  | { type: "gather-failed"; at: Cell; reason: "no-resource" }
+  | { type: "crafted"; output: string; inventory: Record<string, number> }
+  | {
+    type: "craft-failed";
+    output: string;
+    missing: Record<string, number>;
+    reason: "unknown-recipe" | "missing-materials";
+  };
 
 const STEPS: Record<Direction, Cell> = {
   north: { x: 0, y: -1 },
@@ -76,7 +86,48 @@ export function apply(state: GameState, command: Command): GameEvent[] {
       return move(state, command.direction);
     case "gather":
       return gather(state);
+    case "craft":
+      return craft(state, command.output);
   }
+}
+
+export function missingFor(
+  inventory: Record<string, number>,
+  recipe: Recipe,
+): Record<string, number> {
+  const missing: Record<string, number> = {};
+  for (const [item, needed] of Object.entries(recipe.inputs)) {
+    const deficit = needed - (inventory[item] ?? 0);
+    if (deficit > 0) missing[item] = deficit;
+  }
+  return missing;
+}
+
+function craft(state: GameState, output: string): GameEvent[] {
+  const recipe = RECIPES.find((entry) => entry.output === output);
+  if (!recipe) {
+    return [{
+      type: "craft-failed",
+      output,
+      missing: {},
+      reason: "unknown-recipe",
+    }];
+  }
+  const missing = missingFor(state.inventory, recipe);
+  if (Object.keys(missing).length > 0) {
+    return [{
+      type: "craft-failed",
+      output,
+      missing,
+      reason: "missing-materials",
+    }];
+  }
+  for (const [item, amount] of Object.entries(recipe.inputs)) {
+    state.inventory[item] -= amount;
+    if (state.inventory[item] === 0) delete state.inventory[item];
+  }
+  state.inventory[output] = (state.inventory[output] ?? 0) + 1;
+  return [{ type: "crafted", output, inventory: { ...state.inventory } }];
 }
 
 function move(state: GameState, direction: Direction): GameEvent[] {
@@ -88,7 +139,7 @@ function move(state: GameState, direction: Direction): GameEvent[] {
   const from = { ...state.player };
   const to = { x: from.x + step.x, y: from.y + step.y };
   const terrain = terrainAt(state.seed, to.x, to.y);
-  if (!isPassable(terrain)) {
+  if (!isPassable(terrain, state.inventory)) {
     return [{ type: "blocked", at: from, toward: to, terrain }];
   }
   state.player.x = to.x;
@@ -106,17 +157,20 @@ const GATHER_DIRECTIONS: Direction[] = [
 function gather(state: GameState): GameEvent[] {
   const at = { ...state.player };
 
-  // Look for available resources in adjacent impassable terrain.
+  // Permanently impassable neighbors can be gathered from; a craftable
+  // barrier's resource stays behind that barrier until the player enters it.
   let source: Cell | undefined;
 
-  for (const direction of GATHER_DIRECTIONS) {
-    const step = STEPS[direction];
-    const next = { x: at.x + step.x, y: at.y + step.y };
-    const cell = cellAt(state, next);
+  if (TERRAIN_ACCESS[cellAt(state, at).terrain] === null) {
+    for (const direction of GATHER_DIRECTIONS) {
+      const step = STEPS[direction];
+      const next = { x: at.x + step.x, y: at.y + step.y };
+      const cell = cellAt(state, next);
 
-    if (!isPassable(cell.terrain) && !cell.depleted) {
-      source = next;
-      break;
+      if (TERRAIN_ACCESS[cell.terrain] === false && !cell.depleted) {
+        source = next;
+        break;
+      }
     }
   }
 

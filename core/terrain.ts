@@ -10,6 +10,14 @@ export const TERRAIN_YIELDS: Record<Terrain, string> = {
   mountain: "stones",
 };
 
+// null: walkable, false: never walkable, item name: walkable while held.
+export const TERRAIN_ACCESS: Record<Terrain, string | null | false> = {
+  grassland: null,
+  trees: null,
+  lake: "twig bridge",
+  mountain: false,
+};
+
 export function terrainAt(seed: number, x: number, y: number): Terrain {
   const raw = 0.65 * noise(seed, x, y, 9) + 0.35 * noise(seed + 1, x, y, 3);
   // Every game starts at the origin, so flatten the land there. Otherwise some
@@ -20,8 +28,13 @@ export function terrainAt(seed: number, x: number, y: number): Terrain {
   return noise(seed + 2, x, y, 6) < 0.45 ? "trees" : "grassland";
 }
 
-export function isPassable(terrain: Terrain): boolean {
-  return terrain !== "lake" && terrain !== "mountain";
+export function isPassable(
+  terrain: Terrain,
+  inventory: Record<string, number> = {},
+): boolean {
+  const access = TERRAIN_ACCESS[terrain];
+  return access === null ||
+    (access !== false && (inventory[access] ?? 0) > 0);
 }
 
 // Value noise: random numbers at coarse grid points, blended between them, so

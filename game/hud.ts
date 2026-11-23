@@ -1,4 +1,9 @@
-import { type GameEvent, type GameState, terrainAt } from "../core/mod.ts";
+import {
+  type GameEvent,
+  type GameState,
+  TERRAIN_ACCESS,
+  terrainAt,
+} from "../core/mod.ts";
 
 function element(id: string): HTMLElement {
   return document.getElementById(id)!;
@@ -9,11 +14,25 @@ function describe(event: GameEvent): string {
     case "moved":
       return `moved to ${event.to.x}, ${event.to.y}`;
     case "blocked":
-      return `blocked by ${event.terrain} at ${event.toward.x}, ${event.toward.y}`;
+      return `blocked by ${event.terrain} at ${event.toward.x}, ${event.toward.y}${
+        typeof TERRAIN_ACCESS[event.terrain] === "string"
+          ? ` (requires ${TERRAIN_ACCESS[event.terrain]})`
+          : ""
+      }`;
     case "gathered":
       return `gathered ${event.item}`;
     case "gather-failed":
       return "nothing available to gather";
+    case "crafted":
+      return `crafted ${event.output}; the lake is now passable`;
+    case "craft-failed":
+      return event.reason === "unknown-recipe"
+        ? `unknown recipe: ${event.output}`
+        : `need ${
+          Object.entries(event.missing).map(([item, count]) =>
+            `${count} ${count === 1 && item === "stones" ? "stone" : item}`
+          ).join(", ")
+        } to craft ${event.output}`;
   }
 }
 
@@ -35,7 +54,7 @@ export class Hud {
       this.showPosition(event.to.x, event.to.y);
     }
 
-    if (event.type === "gathered") {
+    if (event.type === "gathered" || event.type === "crafted") {
       this.showInventory(event.inventory);
     }
   }
