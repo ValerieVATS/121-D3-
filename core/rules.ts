@@ -31,7 +31,13 @@ export type Command =
 export type GameEvent =
   | { type: "moved"; from: Cell; to: Cell }
   | { type: "blocked"; at: Cell; toward: Cell; terrain: Terrain }
-  | { type: "gathered"; at: Cell; source: Cell; item: string }
+  | {
+    type: "gathered";
+    at: Cell;
+    source: Cell;
+    item: string;
+    inventory: Record<string, number>;
+  }
   | { type: "gather-failed"; at: Cell; reason: "no-resource" };
 
 const STEPS: Record<Direction, Cell> = {
@@ -137,5 +143,6 @@ function gather(state: GameState): GameEvent[] {
     at,
     source: { ...source },
     item,
+    inventory: { ...state.inventory },
   }];
 }

@@ -1,64 +1,18 @@
-/* The page around the grid. Everything here is yours to restyle. */
 body {
   margin: 0;
-  background: #14161a;
-  color: #e8e4da;
-  font: 14px system-ui, sans-serif;
+  background: #242b22;
+  color: #eee8d5;
+  font: 14px Georgia, serif;
 }
 
 #app {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  padding: 16px;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 24px;
 }
 
-#grid canvas {
-  display: block;
-  border-radius: 4px;
-}
-
-#hud {
-  flex: 1 1 200px;
-  max-width: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-#hud dl {
-  margin: 0;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 2px 12px;
-}
-
-#hud dt {
-  color: #8d8a82;
-}
-
-#hud dd {
-  margin: 0;
-}
-
-#live {
-  min-height: 1.4em;
-  margin: 0;
-  font-family: monospace;
-  color: #b7b3a8;
-}
-
-#mute {
-  align-self: start;
-  padding: 4px 10px;
-  color: inherit;
-  background: #262a31;
-  border: 1px solid #3a3f48;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-/* Slight tilt and vignette: pure presentation, Phaser untouched. */
 #grid {
   position: relative;
   perspective: 1200px;
@@ -69,15 +23,169 @@ body {
   transform: rotateX(6deg);
 }
 
+#grid canvas {
+  display: block;
+  border: 5px solid #6b5438;
+  border-radius: 5px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+}
+
 #grid::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  border-radius: 4px;
+  border-radius: 5px;
   background: radial-gradient(
     ellipse at center,
     transparent 55%,
-    rgb(0 0 0 / 0.5) 100%
+    rgb(0 0 0 / 0.35) 100%
   );
+}
+
+#intro {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #c9b995;
+}
+
+#intro h2 {
+  margin: 0 0 8px;
+  color: #354331;
+  font-size: 21px;
+}
+
+#intro p {
+  margin: 0;
+  color: #647052;
+  line-height: 1.6;
+}
+
+#hud {
+  flex: 1 1 220px;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: #e8dfc5;
+  color: #354331;
+  border: 2px solid #a58a5e;
+  border-radius: 5px;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.3);
+}
+
+#hud dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px 14px;
+  line-height: 1.4;
+}
+
+#hud dt {
+  color: #71805d;
+  font-weight: bold;
+}
+
+#hud dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+#inventory {
+  margin: 0;
+  padding: 8px 8px 8px 24px;
+  min-height: 1.5em;
+  background: #f3ecd9;
+  border: 1px solid #c9b995;
+  border-radius: 3px;
+}
+
+#inventory li {
+  padding: 2px 0;
+}
+
+#depleted {
+  font-size: 12px;
+}
+
+#live {
+  min-height: 1.4em;
+  margin: 0;
+  padding: 10px;
+  background: #d8dfc5;
+  border-left: 3px solid #758b56;
+  color: #354331;
+  font-family: monospace;
+  line-height: 1.5;
+}
+
+#mute {
+  align-self: start;
+  padding: 7px 12px;
+  color: #eee8d5;
+  background: #526747;
+  border: 1px solid #354331;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#mute:hover {
+  background: #687f58;
+}
+
+#mute:focus-visible {
+  outline: 2px solid #a58a5e;
+  outline-offset: 3px;
+}
+
+#controls {
+  flex: 0 1 160px;
+  max-width: 180px;
+  padding: 16px;
+  align-self: flex-start;
+  background: #e8dfc5;
+  color: #354331;
+  border: 2px solid #a58a5e;
+  border-radius: 5px;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.3);
+}
+
+#controls h2 {
+  margin: 0 0 14px;
+  font-size: 20px;
+}
+
+#controls ul {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#controls li {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: #647052;
+}
+
+#controls kbd {
+  display: inline-block;
+  padding: 3px 7px;
+  margin-right: 2px;
+  background: #f3ecd9;
+  border: 1px solid #c9b995;
+  border-radius: 4px;
+  color: #354331;
+  font-family: monospace;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 2px 0 #c9b995;
+}
+
+#controls #mute {
+  margin-top: 16px;
 }

@@ -9,20 +9,56 @@
   </head>
   <body>
     <main id="app">
+      <!-- Controls panel -->
+      <aside id="controls">
+        <h2>Controls</h2>
+        <ul>
+          <li>
+            <span>Move</span>
+            <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd>
+          </li>
+          <li>
+            <span>Gather materials</span>
+            <kbd>G</kbd>
+          </li>
+        </ul>
+
+        <button id="mute" type="button" aria-pressed="false">
+          Sound: on
+        </button>
+      </aside>
+
+      <!-- Game map -->
       <div id="grid"></div>
+
+      <!-- Journal and inventory panel -->
       <aside id="hud">
+        <section id="intro">
+          <h2>A Nest to Call Home</h2>
+          <p>
+            Help a mother bird find feathers, sticks, moss, and stones from
+            the surrounding land. Use what you can find to prepare food for
+            your hungry chicks and build a safe, cozy home.
+          </p>
+        </section>
+
         <dl>
           <dt>Position</dt>
           <dd id="position"></dd>
+
           <dt>Terrain</dt>
           <dd id="terrain"></dd>
-          <dt>Depleted cells</dt>
-          <dd id="depleted"></dd>
+
+          <dt>Inventory</dt>
+          <dd>
+            <ul id="inventory"></ul>
+          </dd>
         </dl>
+
         <p id="live" aria-live="polite"></p>
-        <button id="mute" type="button" aria-pressed="false">Sound: on</button>
       </aside>
     </main>
+
     <script type="module" src="/game/main.ts"></script>
   </body>
 </html>

@@ -9,6 +9,8 @@ const VIEW_WIDTH = 800;
 const VIEW_HEIGHT = 600;
 const WALK_MS = 120;
 const BUMP_MS = 60;
+const GATHER_MS = 140;
+const GATHER_COLOR = 0xb9d77a;
 const MARKER_COLOR = 0xf5e6a8;
 const BUMP_COLOR = 0xe0533d;
 
@@ -88,7 +90,7 @@ export class GridView extends Phaser.Scene {
       case "gathered":
         this.depletedCells[`${event.source.x},${event.source.y}`] = true;
         this.drawCellsAround(event.at);
-        return Promise.resolve();
+        return this.gather();
 
       case "gather-failed":
         return Promise.resolve();
@@ -123,6 +125,27 @@ export class GridView extends Phaser.Scene {
         duration: BUMP_MS,
         yoyo: true,
         onComplete: () => {
+          this.marker.setFillStyle(MARKER_COLOR);
+          done();
+        },
+      });
+    });
+  }
+
+  // Pulse the marker to show that gathering happened.
+  private gather(): Promise<void> {
+    this.marker.setFillStyle(GATHER_COLOR);
+
+    return new Promise((done) => {
+      this.tweens.add({
+        targets: this.marker,
+        scale: 1.35,
+        alpha: 0.55,
+        duration: GATHER_MS,
+        yoyo: true,
+        onComplete: () => {
+          this.marker.setScale(1);
+          this.marker.setAlpha(1);
           this.marker.setFillStyle(MARKER_COLOR);
           done();
         },

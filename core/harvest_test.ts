@@ -34,6 +34,35 @@ function findPlayerCell(terrain: Terrain): Cell {
   throw new Error(`No suitable ${terrain} cell found.`);
 }
 
+// Find a grassland cell whose eastern neighbor is trees.
+function findPlayerWithTreesEast(): Cell {
+  for (let y = -100; y <= 100; y++) {
+    for (let x = -100; x <= 100; x++) {
+      const player = { x, y };
+      const trees = { x: x + 1, y };
+
+      if (terrainAt(SEED, x, y) !== "grassland") continue;
+      if (terrainAt(SEED, trees.x, trees.y) !== "trees") continue;
+
+      const playerNeighborsClear = NEIGHBORS.every((step) =>
+        isPassable(terrainAt(SEED, x + step.x, y + step.y))
+      );
+
+      const treesNeighborsClear = NEIGHBORS.every((step) =>
+        isPassable(
+          terrainAt(SEED, trees.x + step.x, trees.y + step.y),
+        )
+      );
+
+      if (playerNeighborsClear && treesNeighborsClear) {
+        return player;
+      }
+    }
+  }
+
+  throw new Error("No suitable grassland and trees pair found.");
+}
+
 // Find a player cell with exactly one adjacent impassable cell
 function findAdjacentSource(terrain: Terrain): {
   player: Cell;
@@ -88,6 +117,7 @@ Deno.test("gathering from grassland adds feathers", () => {
     at: player,
     source: player,
     item: "feathers",
+    inventory: { feathers: 1 },
   }]);
 });
 
@@ -108,6 +138,7 @@ Deno.test("gathering beside a lake adds moss", () => {
     at: player,
     source,
     item: "moss",
+    inventory: { moss: 1 },
   }]);
 });
 
@@ -128,7 +159,32 @@ Deno.test("gathering beside a mountain adds stones", () => {
     at: player,
     source,
     item: "stones",
+    inventory: { stones: 1 },
   }]);
+});
+
+Deno.test("a gathering event keeps its inventory while state moves on", () => {
+  const state = newGame(SEED);
+  const player = findPlayerWithTreesEast();
+  state.player = { ...player };
+
+  const firstEvents = apply(state, { type: "gather" });
+  const firstEvent = firstEvents[0];
+
+  apply(state, { type: "move", direction: "east" });
+  apply(state, { type: "gather" });
+
+  assertEquals(state.inventory, {
+    feathers: 1,
+    sticks: 1,
+  });
+  assertEquals(firstEvent, {
+    type: "gathered",
+    at: player,
+    source: player,
+    item: "feathers",
+    inventory: { feathers: 1 },
+  });
 });
 
 Deno.test("gathering the same cell twice gives nothing", () => {

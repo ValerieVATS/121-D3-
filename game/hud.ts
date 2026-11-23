@@ -22,12 +22,10 @@ function describe(event: GameEvent): string {
 
 export class Hud {
   private readonly seed: number;
-  private readonly depletedCells: Record<string, string> = {};
 
   constructor(state: GameState) {
     this.seed = state.seed;
     this.showPosition(state.player.x, state.player.y);
-    this.showDepletedCells();
   }
 
   show(event: GameEvent) {
@@ -38,9 +36,7 @@ export class Hud {
     }
 
     if (event.type === "gathered") {
-      const key = `${event.source.x},${event.source.y}`;
-      this.depletedCells[key] = event.item;
-      this.showDepletedCells();
+      this.showInventory(event.inventory);
     }
   }
 
@@ -49,9 +45,14 @@ export class Hud {
     element("terrain").textContent = terrainAt(this.seed, x, y);
   }
 
-  private showDepletedCells() {
-    element("depleted").textContent = Object.entries(this.depletedCells)
-      .map(([cell, item]) => `${cell}: ${item}`)
-      .join("; ") || "None";
+  private showInventory(inventory: Record<string, number>) {
+    const list = element("inventory");
+    list.replaceChildren();
+
+    for (const [item, count] of Object.entries(inventory)) {
+      const entry = document.createElement("li");
+      entry.textContent = `${item}: ${count}`;
+      list.appendChild(entry);
+    }
   }
 }
