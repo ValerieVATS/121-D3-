@@ -36,6 +36,7 @@ function cellCenter({ x, y }: Cell): Cell {
 export class GridView extends Phaser.Scene {
   private readonly seed: number;
   private readonly start: Cell;
+  private readonly depletedCells: Record<string, boolean> = {};
   private ground!: Phaser.GameObjects.Graphics;
   private marker!: Phaser.GameObjects.Arc;
 
@@ -80,10 +81,19 @@ export class GridView extends Phaser.Scene {
       case "moved":
         this.drawCellsAround(event.to);
         return this.walk(event.to);
+
       case "blocked":
         return this.bump(event.at, event.toward);
+
+      case "gathered":
+        this.depletedCells[`${event.source.x},${event.source.y}`] = true;
+        this.drawCellsAround(event.at);
+        return Promise.resolve();
+
+      case "gather-failed":
+        return Promise.resolve();
+
       default:
-        // A new event type fails to type-check here until it has a presentation.
         event satisfies never;
         return Promise.resolve();
     }
@@ -133,6 +143,17 @@ export class GridView extends Phaser.Scene {
           CELL_SIZE - 1,
           CELL_SIZE - 1,
         );
+
+        // Darken cells that have been gathered from.
+        if (this.depletedCells[`${x},${y}`]) {
+          this.ground.fillStyle(0x202020, 0.55);
+          this.ground.fillRect(
+            x * CELL_SIZE,
+            y * CELL_SIZE,
+            CELL_SIZE - 1,
+            CELL_SIZE - 1,
+          );
+        }
       }
     }
   }

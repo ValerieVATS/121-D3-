@@ -10,26 +10,48 @@ function describe(event: GameEvent): string {
       return `moved to ${event.to.x}, ${event.to.y}`;
     case "blocked":
       return `blocked by ${event.terrain} at ${event.toward.x}, ${event.toward.y}`;
+    case "gathered":
+      return `gathered ${event.item}`;
+    case "gather-failed":
+      return "nothing available to gather";
   }
 }
 
 // The readout, as ordinary page elements that CSS can style and that assistive
 // tools can read. It changes only as events play.
+
 export class Hud {
   private readonly seed: number;
+  private readonly depletedCells: Record<string, string> = {};
 
   constructor(state: GameState) {
     this.seed = state.seed;
     this.showPosition(state.player.x, state.player.y);
+    this.showDepletedCells();
   }
 
   show(event: GameEvent) {
     element("live").textContent = describe(event);
-    if (event.type === "moved") this.showPosition(event.to.x, event.to.y);
+
+    if (event.type === "moved") {
+      this.showPosition(event.to.x, event.to.y);
+    }
+
+    if (event.type === "gathered") {
+      const key = `${event.source.x},${event.source.y}`;
+      this.depletedCells[key] = event.item;
+      this.showDepletedCells();
+    }
   }
 
   private showPosition(x: number, y: number) {
     element("position").textContent = `${x}, ${y}`;
     element("terrain").textContent = terrainAt(this.seed, x, y);
+  }
+
+  private showDepletedCells() {
+    element("depleted").textContent = Object.entries(this.depletedCells)
+      .map(([cell, item]) => `${cell}: ${item}`)
+      .join("; ") || "None";
   }
 }
