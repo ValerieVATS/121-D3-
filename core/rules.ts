@@ -4,8 +4,8 @@
 
 import {
   isPassable,
+  mountainYield,
   type Terrain,
-  TERRAIN_ACCESS,
   TERRAIN_YIELDS,
   terrainAt,
 } from "./terrain.ts";
@@ -22,6 +22,7 @@ export type GameState = {
   player: Cell;
   inventory: Record<string, number>;
   changedCells: Record<string, string>;
+  ended: boolean;
 };
 
 // Command: https://gameprogrammingpatterns.com/command.html
@@ -43,6 +44,7 @@ export type GameEvent =
   }
   | { type: "gather-failed"; at: Cell; reason: "no-resource" }
   | { type: "crafted"; output: string; inventory: Record<string, number> }
+  | { type: "escaped"; inventory: Record<string, number> }
   | {
     type: "craft-failed";
     output: string;
@@ -64,6 +66,7 @@ export function newGame(seed: number): GameState {
     player: { x: 0, y: 0 },
     inventory: {},
     changedCells: {},
+    ended: false,
   };
 }
 
@@ -81,6 +84,7 @@ export function cellAt(
 
 // The single way in. It updates the state it is given and returns the events.
 export function apply(state: GameState, command: Command): GameEvent[] {
+  if (state.ended) return [];
   switch (command.type) {
     case "move":
       return move(state, command.direction);
@@ -127,6 +131,10 @@ function craft(state: GameState, output: string): GameEvent[] {
     if (state.inventory[item] === 0) delete state.inventory[item];
   }
   state.inventory[output] = (state.inventory[output] ?? 0) + 1;
+  if (output === "beacon") {
+    state.ended = true;
+    return [{ type: "escaped", inventory: { ...state.inventory } }];
+  }
   return [{ type: "crafted", output, inventory: { ...state.inventory } }];
 }
 
@@ -147,38 +155,9 @@ function move(state: GameState, direction: Direction): GameEvent[] {
   return [{ type: "moved", from, to }];
 }
 
-const GATHER_DIRECTIONS: Direction[] = [
-  "north",
-  "east",
-  "south",
-  "west",
-];
-
 function gather(state: GameState): GameEvent[] {
   const at = { ...state.player };
-
-  // Permanently impassable neighbors can be gathered from; a craftable
-  // barrier's resource stays behind that barrier until the player enters it.
-  let source: Cell | undefined;
-
-  if (TERRAIN_ACCESS[cellAt(state, at).terrain] === null) {
-    for (const direction of GATHER_DIRECTIONS) {
-      const step = STEPS[direction];
-      const next = { x: at.x + step.x, y: at.y + step.y };
-      const cell = cellAt(state, next);
-
-      if (TERRAIN_ACCESS[cell.terrain] === false && !cell.depleted) {
-        source = next;
-        break;
-      }
-    }
-  }
-
-  // If there is no adjacent resource, gather from the current cell.
-  if (!source) {
-    const current = cellAt(state, at);
-    if (!current.depleted) source = at;
-  }
+  const source = !cellAt(state, at).depleted ? at : undefined;
 
   // Nothing available to gather.
   if (!source) {
@@ -186,7 +165,9 @@ function gather(state: GameState): GameEvent[] {
   }
 
   const terrain = terrainAt(state.seed, source.x, source.y);
-  const item = TERRAIN_YIELDS[terrain];
+  const item = terrain === "mountain"
+    ? mountainYield(state.seed, source.x, source.y)
+    : TERRAIN_YIELDS[terrain];
   const key = `${source.x},${source.y}`;
 
   state.changedCells[key] = "depleted";

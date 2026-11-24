@@ -121,14 +121,14 @@ Deno.test("gathering from grassland adds feathers", () => {
   }]);
 });
 
-Deno.test("moss is only gathered after entering the lake", () => {
+Deno.test("water is only gathered after entering the lake", () => {
   const state = newGame(SEED);
   const { player, source } = findAdjacentSource("lake");
   state.player = player;
 
   const before = apply(state, { type: "gather" });
   assertEquals(before[0].type, "gathered");
-  assertEquals(state.inventory.moss, undefined);
+  assertEquals(state.inventory.water, undefined);
   assertEquals(state.changedCells[`${source.x},${source.y}`], undefined);
 
   state.inventory["twig bridge"] = 1;
@@ -142,7 +142,7 @@ Deno.test("moss is only gathered after entering the lake", () => {
   });
   const events = apply(state, { type: "gather" });
 
-  assertEquals(state.inventory.moss, 1);
+  assertEquals(state.inventory.water, 1);
   assertEquals(
     state.changedCells[`${source.x},${source.y}`],
     "depleted",
@@ -151,29 +151,29 @@ Deno.test("moss is only gathered after entering the lake", () => {
     type: "gathered",
     at: source,
     source,
-    item: "moss",
+    item: "water",
     inventory: { ...state.inventory },
   }]);
 });
 
-Deno.test("gathering beside a mountain adds stones", () => {
+Deno.test("gathering beside a mountain cannot mine it", () => {
   const state = newGame(SEED);
   const { player, source } = findAdjacentSource("mountain");
   state.player = player;
 
   const events = apply(state, { type: "gather" });
 
-  assertEquals(state.inventory, { stones: 1 });
-  assertEquals(
-    state.changedCells[`${source.x},${source.y}`],
-    "depleted",
-  );
+  assertEquals(state.inventory.stones, undefined);
+  assertEquals(state.inventory.iron, undefined);
+  assertEquals(state.changedCells[`${source.x},${source.y}`], undefined);
   assertEquals(events, [{
     type: "gathered",
     at: player,
-    source,
-    item: "stones",
-    inventory: { stones: 1 },
+    source: player,
+    item: terrainAt(SEED, player.x, player.y) === "trees"
+      ? "sticks"
+      : "feathers",
+    inventory: { ...state.inventory },
   }]);
 });
 

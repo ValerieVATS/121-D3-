@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>D3 project</title>
+    <title>Escape the Planet</title>
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="/game/style.css" />
   </head>
@@ -34,10 +34,12 @@
       <!-- Journal and inventory panel -->
       <aside id="hud">
         <section id="intro">
-          <h2>A Nest to Call Home</h2>
+          <h2>Escape the Planet</h2>
           <p>
-            Gather sticks and stones to make a twig bridge across the lake.
-            Cross it to find moss for a safe, cozy nest for your chicks.
+            Craft a ladder from sticks to climb the grey mountains. Gather stone
+            and iron there (iron appears 30% of the time). Build a twig bridge
+            to cross lakes and gather water. Craft a beacon with 20 stone,
+            20 iron, and 10 water to summon a spaceship and escape!
           </p>
         </section>
 
@@ -61,6 +63,9 @@
         </section>
 
         <p id="live" aria-live="polite"></p>
+        <p id="ending" role="status" hidden>
+          A spaceship answers your beacon. You take off and escape the planet!!!!!
+        </p>
       </aside>
     </main>
 

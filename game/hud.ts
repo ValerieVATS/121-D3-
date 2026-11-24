@@ -24,7 +24,11 @@ function describe(event: GameEvent): string {
     case "gather-failed":
       return "nothing available to gather";
     case "crafted":
-      return `crafted ${event.output}; the lake is now passable`;
+      return `crafted ${event.output}; ${
+        event.output === "ladder" ? "mountains" : "lakes"
+      } are now passable`;
+    case "escaped":
+      return "Beacon activated! A spaceship has arrived. You escaped the planet!";
     case "craft-failed":
       return event.reason === "unknown-recipe"
         ? `unknown recipe: ${event.output}`
@@ -54,8 +58,14 @@ export class Hud {
       this.showPosition(event.to.x, event.to.y);
     }
 
-    if (event.type === "gathered" || event.type === "crafted") {
+    if (
+      event.type === "gathered" || event.type === "crafted" ||
+      event.type === "escaped"
+    ) {
       this.showInventory(event.inventory);
+    }
+    if (event.type === "escaped") {
+      element("ending").hidden = false;
     }
   }
 

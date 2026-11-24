@@ -6,17 +6,31 @@ export type Terrain = "grassland" | "trees" | "lake" | "mountain";
 export const TERRAIN_YIELDS: Record<Terrain, string> = {
   grassland: "feathers",
   trees: "sticks",
-  lake: "moss",
+  lake: "water",
   mountain: "stones",
 };
 
-// null: walkable, false: never walkable, item name: walkable while held.
-export const TERRAIN_ACCESS: Record<Terrain, string | null | false> = {
+// null: freely walkable; item name: walkable while held.
+export const TERRAIN_ACCESS: Record<Terrain, string | null> = {
   grassland: null,
   trees: null,
   lake: "twig bridge",
-  mountain: false,
+  mountain: "ladder",
 };
+
+// One deterministic roll per mountain cell. Unsigned 32-bit hashing spreads
+// adjacent coordinates over the whole range without storing random state.
+export function mountainYield(
+  seed: number,
+  x: number,
+  y: number,
+): "iron" | "stones" {
+  let hash = Math.imul(seed ^ 0x9e3779b9, 0x85ebca6b);
+  hash = Math.imul(hash ^ x, 0xc2b2ae35);
+  hash = Math.imul(hash ^ y, 0x27d4eb2d);
+  hash ^= hash >>> 16;
+  return (hash >>> 0) / 0x100000000 < 0.3 ? "iron" : "stones";
+}
 
 export function terrainAt(seed: number, x: number, y: number): Terrain {
   const raw = 0.65 * noise(seed, x, y, 9) + 0.35 * noise(seed + 1, x, y, 3);
@@ -33,8 +47,7 @@ export function isPassable(
   inventory: Record<string, number> = {},
 ): boolean {
   const access = TERRAIN_ACCESS[terrain];
-  return access === null ||
-    (access !== false && (inventory[access] ?? 0) > 0);
+  return access === null || (inventory[access] ?? 0) > 0;
 }
 
 // Value noise: random numbers at coarse grid points, blended between them, so

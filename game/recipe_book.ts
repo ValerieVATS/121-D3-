@@ -31,12 +31,16 @@ export class RecipeBook {
 
   update() {
     RECIPES.forEach((recipe, index) => {
+      this.buttons[index].disabled = this.state.ended;
       const missing = missingFor(this.state.inventory, recipe);
       const details = Object.entries(missing).map(([item, amount]) =>
         `${amount} ${amount === 1 && item === "stones" ? "stone" : item}`
       ).join(", ");
-      this.buttons[index].textContent = `Craft ${recipe.output} — ${
-        details || "ready"
+      const costs = Object.entries(recipe.inputs).map(([item, amount]) =>
+        `${amount} ${amount === 1 && item === "stones" ? "stone" : item}`
+      ).join(", ");
+      this.buttons[index].textContent = `Craft ${recipe.output} (${costs}) — ${
+        details ? `need ${details}` : "ready"
       }`;
     });
   }

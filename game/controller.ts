@@ -37,11 +37,13 @@ export class Controller {
   }
 
   submit(command: Command) {
+    if (this.state.ended) return;
     this.pressed = command;
     this.next();
   }
 
   private keyDown(event: KeyboardEvent) {
+    if (this.state.ended) return;
     if (event.ctrlKey || event.metaKey || event.altKey) return;
 
     // G gathers. Queue it the same way as a movement command.
@@ -70,6 +72,11 @@ export class Controller {
   }
 
   private next() {
+    if (this.state.ended) {
+      this.pressed = null;
+      this.held = [];
+      return;
+    }
     // While the presenter is busy, input waits and the core hears nothing. The
     // busy state lives here in game/: the core never learns about animation.
     if (this.presenter.busy) return;

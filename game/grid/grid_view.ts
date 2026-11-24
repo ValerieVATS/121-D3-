@@ -40,6 +40,7 @@ export class GridView extends Phaser.Scene {
   private readonly start: Cell;
   private readonly depletedCells: Record<string, boolean> = {};
   private lakeOpen = false;
+  private mountainOpen = false;
   private ground!: Phaser.GameObjects.Graphics;
   private marker!: Phaser.GameObjects.Arc;
 
@@ -97,14 +98,16 @@ export class GridView extends Phaser.Scene {
         return Promise.resolve();
 
       case "crafted":
-        if (isPassable("lake", event.inventory)) {
-          this.lakeOpen = true;
-          const position = {
-            x: Math.floor(this.marker.x / CELL_SIZE),
-            y: Math.floor(this.marker.y / CELL_SIZE),
-          };
-          this.drawCellsAround(position);
-        }
+        this.lakeOpen = isPassable("lake", event.inventory);
+        this.mountainOpen = isPassable("mountain", event.inventory);
+        this.drawCellsAround({
+          x: Math.floor(this.marker.x / CELL_SIZE),
+          y: Math.floor(this.marker.y / CELL_SIZE),
+        });
+        return Promise.resolve();
+
+      case "escaped":
+        this.marker.setFillStyle(0xffffff);
         return Promise.resolve();
 
       case "craft-failed":
@@ -178,6 +181,8 @@ export class GridView extends Phaser.Scene {
         this.ground.fillStyle(
           terrain === "lake" && this.lakeOpen
             ? 0x498fbd
+            : terrain === "mountain" && this.mountainOpen
+            ? 0x969592
             : TERRAIN_COLORS[terrain],
         );
         this.ground.fillRect(

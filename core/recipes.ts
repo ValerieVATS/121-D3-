@@ -5,5 +5,7 @@ export type Recipe = {
 
 // An ordinary new row needs no new crafting rule.
 export const RECIPES: Recipe[] = [
-  { output: "twig bridge", inputs: { sticks: 2, stones: 1 } },
+  { output: "ladder", inputs: { sticks: 4 } },
+  { output: "twig bridge", inputs: { sticks: 2 } },
+  { output: "beacon", inputs: { stones: 20, iron: 20, water: 10 } },
 ];

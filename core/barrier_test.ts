@@ -22,7 +22,7 @@ function shore() {
   throw new Error("No lake shore found");
 }
 
-Deno.test("lake blocks movement until bridge is crafted, then yields moss", () => {
+Deno.test("lake blocks movement until bridge is crafted, then yields water", () => {
   const state = newGame(seed);
   const { player, lake } = shore();
   state.player = player;
@@ -30,7 +30,7 @@ Deno.test("lake blocks movement until bridge is crafted, then yields moss", () =
   assertEquals(blocked[0].type, "blocked");
   assertEquals(state.player, player);
 
-  const recipe = RECIPES[0];
+  const recipe = RECIPES.find((r) => r.output === "twig bridge")!;
   state.inventory = { ...recipe.inputs };
   const crafted = apply(state, { type: "craft", output: recipe.output });
   assertEquals(crafted[0].type, "crafted");
@@ -42,9 +42,44 @@ Deno.test("lake blocks movement until bridge is crafted, then yields moss", () =
   assertEquals(state.player, { x: lake.x, y: lake.y });
   const gathered = apply(state, { type: "gather" });
   assertEquals(gathered[0].type, "gathered");
-  assertEquals(state.inventory.moss, 1);
+  assertEquals(state.inventory.water, 1);
   assertEquals(state.changedCells[`${lake.x},${lake.y}`], "depleted");
 
   const snapshot = JSON.parse(JSON.stringify(state));
   assertEquals(snapshot, state);
+});
+
+Deno.test("mountain blocks mining until ladder permits entering it", () => {
+  const state = newGame(seed);
+  for (let y = -60; y <= 60; y++) {
+    for (let x = -60; x <= 60; x++) {
+      if (!isPassable(terrainAt(seed, x, y))) continue;
+      if (terrainAt(seed, x + 1, y) !== "mountain") continue;
+      state.player = { x, y };
+      assertEquals(
+        apply(state, { type: "move", direction: "east" })[0].type,
+        "blocked",
+      );
+      apply(state, { type: "gather" });
+      assertEquals(state.inventory.stones, undefined);
+      assertEquals(state.inventory.iron, undefined);
+      assertEquals(state.changedCells[`${x + 1},${y}`], undefined);
+      state.inventory = { sticks: 4 };
+      assertEquals(
+        apply(state, { type: "craft", output: "ladder" })[0].type,
+        "crafted",
+      );
+      assertEquals(
+        apply(state, { type: "move", direction: "east" })[0].type,
+        "moved",
+      );
+      assertEquals(apply(state, { type: "gather" })[0].type, "gathered");
+      assertEquals(
+        (state.inventory.stones ?? 0) + (state.inventory.iron ?? 0),
+        1,
+      );
+      return;
+    }
+  }
+  throw new Error("No mountain shore found");
 });

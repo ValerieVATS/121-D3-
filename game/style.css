@@ -146,6 +146,20 @@ body {
   line-height: 1.5;
 }
 
+#ending:not([hidden]) {
+  padding: 14px;
+  background: #d8dfc5;
+  border: 2px solid #758b56;
+  border-radius: 5px;
+  font-weight: bold;
+  line-height: 1.5;
+}
+
+#recipes button:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
 #mute {
   align-self: start;
   padding: 7px 12px;

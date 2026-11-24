@@ -8,7 +8,7 @@ import {
   unreachableRecipes,
 } from "./mod.ts";
 
-const bridge = RECIPES[0];
+const bridge = RECIPES.find((r) => r.output === "twig bridge")!;
 
 Deno.test("crafting without materials changes nothing and reports what is missing", () => {
   const state = newGame(121);
@@ -40,6 +40,7 @@ Deno.test("craft spends ingredients and a retained event keeps its inventory", (
 
 Deno.test("every recipe ingredient has a gatherable or crafted source", () => {
   const sources = new Set([
+    "iron",
     ...Object.values(TERRAIN_YIELDS),
     ...RECIPES.map((r) => r.output),
   ]);
@@ -50,26 +51,54 @@ Deno.test("every recipe ingredient has a gatherable or crafted source", () => {
   }
 });
 
-Deno.test("fixpoint reaches the bridge and lake moss but catches self-dependency", () => {
+Deno.test("fixpoint reaches the escape recipe but catches self-dependency", () => {
   assertEquals(unreachableRecipes(RECIPES), []);
   assertEquals(
     unreachableRecipes([
       ...RECIPES,
-      { output: "mossy nest", inputs: { moss: 1 } },
+      { output: "water flask", inputs: { water: 1 } },
     ]),
     [],
   );
   assertEquals(
     unreachableRecipes([
       ...RECIPES,
-      { output: "impossible", inputs: { impossible: 1, moss: 1 } },
+      { output: "impossible", inputs: { impossible: 1, water: 1 } },
     ]),
     ["impossible"],
   );
   assertEquals(
     unreachableRecipes([
-      { output: "twig bridge", inputs: { moss: 1 } },
+      { output: "twig bridge", inputs: { water: 1 } },
     ]),
     ["twig bridge"],
   );
+});
+
+Deno.test("beacon spends exact ingredients, summons escape, and ends all commands", () => {
+  const state = newGame(121);
+  const beacon = RECIPES.find((r) => r.output === "beacon")!;
+  assertEquals(beacon.inputs, { stones: 20, iron: 20, water: 10 });
+  assertEquals(
+    apply(state, { type: "craft", output: "beacon" })[0].type,
+    "craft-failed",
+  );
+  state.inventory = { stones: 21, iron: 20, water: 10, ladder: 1 };
+  const events = apply(state, { type: "craft", output: "beacon" });
+  assertEquals(events, [{
+    type: "escaped",
+    inventory: { stones: 1, ladder: 1, beacon: 1 },
+  }]);
+  assertEquals(state.ended, true);
+  const snapshot = JSON.parse(JSON.stringify(state));
+  for (
+    const command of [
+      { type: "gather" } as const,
+      { type: "move", direction: "north" } as const,
+      { type: "craft", output: "ladder" } as const,
+    ]
+  ) {
+    assertEquals(apply(state, command), []);
+    assertEquals(state, snapshot);
+  }
 });

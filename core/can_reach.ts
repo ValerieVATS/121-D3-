@@ -10,8 +10,7 @@ export function unreachableRecipes(recipes: Recipe[]): string[] {
       TERRAIN_ACCESS,
     ) as (keyof typeof TERRAIN_ACCESS)[]
   ) {
-    // Permanently blocked terrain is gatherable from an adjacent cell.
-    if (TERRAIN_ACCESS[terrain] === null || TERRAIN_ACCESS[terrain] === false) {
+    if (TERRAIN_ACCESS[terrain] === null) {
       reached.add(TERRAIN_YIELDS[terrain]);
     }
   }
@@ -33,6 +32,7 @@ export function unreachableRecipes(recipes: Recipe[]): string[] {
       ) {
         if (TERRAIN_ACCESS[terrain] === recipe.output) {
           reached.add(TERRAIN_YIELDS[terrain]);
+          if (terrain === "mountain") reached.add("iron");
         }
       }
       changed = true;
